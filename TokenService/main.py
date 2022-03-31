@@ -7,13 +7,13 @@ from Modules.token_service import TokenService
 from quart import Quart, request, Response
 
 PORT = os.getenv('PORT')
-AUTHENTICATION_TOKEN = os.getenv('AUTHENTICATION_TOKEN')  # ya_ebal_sobaky
+AUTHENTICATION_TOKEN = os.getenv('AUTHENTICATION_TOKEN')  # APP_TOKEN
 app = Quart(__name__)
 token_service = TokenService()
 
 
 # 9ef161e0-06bc-4692-873a-3cd91fb49c8a
-# http://127.0.0.1:1234/get_token/ya_ebal_sobaky/001
+# http://127.0.0.1:1234/get_token/APP_TOKEN/001
 @app.route('/get_token/<string:authentication_token>/<int:userID>', methods=['GET'])
 def get_token(authentication_token: str, userID: int) -> Response:
     content = request.get_json()

@@ -7,7 +7,8 @@ from quart import websocket, Response, abort
 from Modules.node_orchestrator import NodeOrchestrator
 
 PORT = os.getenv('PORT')
-AUTHENTICATION_TOKEN = os.getenv('AUTHENTICATION_TOKEN')  # ya_ebal_sobaky
+# ws://127.0.0.1:1235/ws?token=APP_TOKEN
+AUTHENTICATION_TOKEN = os.getenv('AUTHENTICATION_TOKEN')  # APP_TOKEN
 app = Quart(__name__)
 node_orchestrator = NodeOrchestrator('http://127.0.0.1:1234')
 
@@ -28,18 +29,19 @@ async def get_node(authentication_token: str, player_id: int) -> Response:
 
 
 async def sending():
-    while True:
-        if len(message_queue) > 0:
-            await websocket.send('f{1}')
-        await asyncio.sleep(1)
+    if len(message_queue) > 0:
+        await websocket.send('f{1}')
+    await asyncio.sleep(1)
 
 
 async def receiving():
-    while True:
-        data = await websocket.receive()
-        if data == 'lol':
-            print(connected_sockets[websocket])
-        print(data + "\n=====")
+    data = await websocket.receive()
+    try:
+        lol = json.loads(data)
+        print(lol)
+    except:
+        print('gg')
+        del connected_sockets[websocket._get_current_object()]
 
 
 def registration(func):
@@ -49,10 +51,12 @@ def registration(func):
         if 'token' in websocket.args.keys():
             if websocket.args['token'] == AUTHENTICATION_TOKEN:
                 connected_sockets[websocket._get_current_object()] = len(connected_sockets)
+                node_orchestrator.add_server_node(websocket._get_current_object())
                 try:
                     return await func(*args, **kwargs)
                 finally:
-                    del connected_sockets[websocket._get_current_object()]
+                    if websocket._get_current_object() in connected_sockets.keys():
+                        del connected_sockets[websocket._get_current_object()]
 
     return wrapper
 
@@ -64,9 +68,8 @@ async def ws():
     # print(websocket.remote_addr)
     print(len(connected_sockets))
     print(websocket.args)
-    print(node_orchestrator.check_token(websocket.args['token'], websocket.args['userID']))
     # print(websocket.authorization)
-    while True:
+    while websocket._get_current_object() in connected_sockets.keys():
         producer = asyncio.create_task(sending())
         consumer = asyncio.create_task(receiving())
         await asyncio.gather(producer, consumer)

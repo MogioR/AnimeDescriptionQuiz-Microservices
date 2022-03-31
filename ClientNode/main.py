@@ -83,10 +83,54 @@ async def server_loop():
         print(1)
         await asyncio.sleep(1)
 
+
+message_queue = []
+websocketss = []
+
+
+async def sending(websocket):
+    if len(message_queue) > 0:
+        await websocket.send('f{1}')
+    await asyncio.sleep(1)
+
+
+async def receiving(websocket):
+    data = await websocket.recv()
+    try:
+        lol = json.loads(data)
+        print(lol)
+    except:
+        print('gg')
+
+
+async def websocket_connect(url):
+    try:
+        async with websockets.connect(url) as websocket:
+            websocketss.append(websocket)
+            print(websocketss)
+            while True:
+                # producer = asyncio.create_task()
+                # consumer = asyncio.create_task()
+                # await asyncio.gather(producer, consumer)
+                consumer_task = asyncio.ensure_future(
+                    receiving(websocket)
+                )
+                producer_task = asyncio.ensure_future(
+                    sending(websocket)
+                )
+                done, pending = await asyncio.wait(
+                    [consumer_task, producer_task],
+                    return_when=asyncio.FIRST_COMPLETED,
+                )
+                for task in pending:
+                    task.cancel()
+    except Exception as e:
+        print(e)
+
+
 start_server = websockets.serve(handler, "localhost", 5678)
-
-
 loop = asyncio.get_event_loop()
 loop.run_until_complete(start_server)
-# loop.run_until_complete(server_loop())
+loop.create_task(websocket_connect('ws://127.0.0.1:1235/ws?token=APP_TOKEN'))
+loop.create_task(websocket_connect('ws://127.0.0.1:1235/ws?token=APP_TOKEN'))
 loop.run_forever()
