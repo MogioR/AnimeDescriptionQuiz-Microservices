@@ -38,7 +38,6 @@ async def producer_handler():
             except Exception as e:
                 print("Error", e)
 
-
 async def close_handler(socket):
     await socket.wait_closed()
     disconnect(socket)
@@ -109,9 +108,6 @@ async def websocket_connect(url):
             websocketss.append(websocket)
             print(websocketss)
             while True:
-                # producer = asyncio.create_task()
-                # consumer = asyncio.create_task()
-                # await asyncio.gather(producer, consumer)
                 consumer_task = asyncio.ensure_future(
                     receiving(websocket)
                 )
@@ -128,9 +124,13 @@ async def websocket_connect(url):
         print(e)
 
 
-start_server = websockets.serve(handler, "localhost", 5678)
-loop = asyncio.get_event_loop()
-loop.run_until_complete(start_server)
-loop.create_task(websocket_connect('ws://127.0.0.1:1235/ws?token=APP_TOKEN'))
-loop.create_task(websocket_connect('ws://127.0.0.1:1235/ws?token=APP_TOKEN'))
-loop.run_forever()
+# start_server = websockets.serve(handler, "localhost", 5678)
+# loop = asyncio.get_event_loop()
+# loop.run_until_complete(start_server)
+# loop.create_task(websocket_connect('ws://127.0.0.1:1235/ws?token=APP_TOKEN'))
+# loop.create_task(websocket_connect('ws://127.0.0.1:1235/ws?token=APP_TOKEN'))
+# loop.run_forever()
+
+from Modules.socket_maneger import ClientNode
+
+ClientNode.start()
