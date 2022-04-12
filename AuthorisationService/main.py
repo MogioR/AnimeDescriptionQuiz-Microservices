@@ -1,93 +1,22 @@
-import asyncio
-import websockets
-from collections import deque
+import datetime
+import os
+import time
 import json
-import threading
+from quart import Quart, request, Response
+from Blueprints.login_blueprint import login_blueprint
+from Blueprints.register_blueprint import register_blueprint
 
-import requests
-import re
-
-
-messageQueue = deque()
-gameLoopAlive = 0
-
-clients_id_to_socket = {}
-clients_socket_to_id = {}
+PORT = os.getenv('PORT')
+AUTHENTICATION_TOKEN = os.getenv('AUTHENTICATION_TOKEN')  # APP_TOKEN
+app = Quart(__name__)
+app.register_blueprint(login_blueprint)
+app.register_blueprint(register_blueprint)
 
 
-async def consumer(socket, message):
-    print(message)
-    messageQueue.append(Package(socket, '{}'))
+@app.errorhandler
+def default_error_handler(err):
+    return {"errors": {"message": str(err)}}, getattr(err, "code", 500)
 
 
-async def consumer_handler(socket, path):
-    async for message in socket:
-        print(socket, message)
-        try:
-            await consumer(socket, message)
-        except Exception as e:
-            print("Consumer error: ", e, "socket: ", socket)
-
-
-async def producer_handler():
-    while len(messageQueue) != 0:
-        print('d')
-        package = messageQueue.popleft()
-        print(package.socket, package.message)
-        try:
-            await package.socket.send(package.message)
-        except Exception as e:
-            print("Error", e)
-
-
-async def close_handler(websocket):
-    await websocket.wait_closed()
-    disconnect(websocket)
-
-
-def connect(socket: websockets):
-    len_ = len(clients_id_to_socket)
-    clients_id_to_socket[len_] = socket
-    clients_socket_to_id[socket] = len_
-    print(socket, 'CONNECTED')
-
-
-def disconnect(socket: websockets):
-    id_ = clients_socket_to_id[socket]
-    del clients_id_to_socket[id_]
-    del clients_socket_to_id[socket]
-    print(socket, 'DISCONNECTED')
-
-
-async def handler(socket, path):
-    connect(socket)
-
-    consumer_task = asyncio.ensure_future(
-        consumer_handler(socket, path)
-    )
-    producer_task = asyncio.ensure_future(
-        producer_handler()
-    )
-    wait_close_task = asyncio.ensure_future(
-        close_handler(socket)
-    )
-    done, pending = await asyncio.wait(
-        [consumer_task, producer_task, wait_close_task],
-        return_when=asyncio.FIRST_COMPLETED,
-    )
-    for task in pending:
-        task.cancel()
-
-
-async def server_loop():
-    while True:
-        print(1)
-        await asyncio.sleep(1)
-
-start_server = websockets.serve(handler, "localhost", 5677)
-
-
-loop = asyncio.get_event_loop()
-loop.run_until_complete(start_server)
-# loop.run_until_complete(server_loop())
-loop.run_forever()
+if __name__ == '__main__':
+    app.run(debug=True, port=PORT)

@@ -6,11 +6,11 @@ from quart import Quart
 from quart import websocket, Response, abort
 from Modules.node_orchestrator import NodeOrchestrator
 
-PORT = os.getenv('PORT')
+PORT = os.getenv('CLIENT_NODE_ORCHESTRATION_PORT')
 # ws://127.0.0.1:1235/ws?token=APP_TOKEN
 AUTHENTICATION_TOKEN = os.getenv('AUTHENTICATION_TOKEN')  # APP_TOKEN
 app = Quart(__name__)
-node_orchestrator = NodeOrchestrator('http://127.0.0.1:1234')
+node_orchestrator = NodeOrchestrator(os.getenv('TOKEN_SERVICE_HOST')+':'+os.getenv('TOKEN_SERVICE_PORT'))
 
 message_queue = []
 connected_sockets = dict()

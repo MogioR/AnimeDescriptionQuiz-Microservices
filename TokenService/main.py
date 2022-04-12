@@ -6,20 +6,16 @@ from Modules.token_service import TokenService
 
 from quart import Quart, request, Response
 
-PORT = os.getenv('PORT')
+PORT = os.getenv('TOKEN_SERVICE_PORT')
 AUTHENTICATION_TOKEN = os.getenv('AUTHENTICATION_TOKEN')  # APP_TOKEN
 app = Quart(__name__)
 token_service = TokenService()
 
 
-# 9ef161e0-06bc-4692-873a-3cd91fb49c8a
-# http://127.0.0.1:1234/get_token/APP_TOKEN/001
-@app.route('/get_token/<string:authentication_token>/<int:userID>', methods=['GET'])
-def get_token(authentication_token: str, userID: int) -> Response:
-    content = request.get_json()
-    print(content)
-
-    if authentication_token == AUTHENTICATION_TOKEN:
+# http://127.0.0.1:1234/get_token/001
+@app.route('/get_token/<int:userID>', methods=['GET'])
+async def get_token(userID: int) -> Response:
+    if 'Access-Token' in request.headers.keys() and request.headers['Access-Token'] == AUTHENTICATION_TOKEN:
         token = token_service.create_token(userID)
         return Response(json.dumps({
             'access_token': token.access_token,
@@ -33,7 +29,7 @@ def get_token(authentication_token: str, userID: int) -> Response:
 
 
 @app.route('/check_token/<string:access_token>', methods=['GET'])
-def check_token(access_token: str) -> Response:
+async def check_token(access_token: str) -> Response:
     data, expire = token_service.check_token(access_token)
     if data is not None:
         if not expire:
@@ -51,7 +47,7 @@ def check_token(access_token: str) -> Response:
 
 
 @app.route('/refresh_token/<string:token>', methods=['GET'])
-def refresh_token(token: str) -> Response:
+async def refresh_token(token: str) -> Response:
     token = token_service.refresh_token(token)
     if token is not None:
         return Response(json.dumps({
