@@ -4,6 +4,7 @@ class User:
         self.user_id = user_id
         self.username = account_data['username']
         self.experience = account_data['experience']
+        self.state = {'window': 'none'}
 
     def __str__(self):
         return str({'user_id': self.user_id, 'username': self.username, 'experience': self.experience})
