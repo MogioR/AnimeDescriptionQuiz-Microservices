@@ -12,5 +12,4 @@ class QuestionModel(BaseModel):
     question_guessed_times = IntegerField(null=False, default=0)
 
     class Meta:
-        db_table = "tag"
-        order_by = ('tag_name',)
+        db_table = "question"
