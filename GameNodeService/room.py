@@ -1,6 +1,7 @@
 from Package.package import Package
 from user import User
 from room_settings import RoomSettings
+from default_quiz import DefaultQuiz
 
 
 class Room:
@@ -10,6 +11,8 @@ class Room:
         self.options = []
         self.status = "created"
         self.settings = RoomSettings(room_settings)
+
+        self.quiz = DefaultQuiz()
 
     def connect(self, user: User) -> list:
         if self.host is None:
@@ -50,3 +53,15 @@ class Room:
             messages_to_users.append(Package(user.socket, message_to_users))
 
         return messages_to_users
+
+    def update(self):
+        self.quiz.update()
+
+    def start_quiz(self):
+        self.quiz.start_quiz()
+
+    def stop_quiz(self):
+        self.stop_quiz()
+
+    def resume_quiz(self):
+        self.quiz.resume_quiz()
