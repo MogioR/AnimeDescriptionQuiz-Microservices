@@ -1,7 +1,7 @@
 from peewee import *
-from base_model import BaseModel
-from question_model import QuestionModel
-from title_model import TitleModel
+from .base_model import BaseModel
+from .question_model import QuestionModel
+from .title_model import TitleModel
 
 
 class QuestionAnswerModel(BaseModel):

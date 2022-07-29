@@ -1,6 +1,6 @@
 from peewee import *
 from datetime import datetime
-from base_model import BaseModel
+from .base_model import BaseModel
 
 
 class TitleModel(BaseModel):

@@ -1,4 +1,4 @@
-from Package.package import Package
+from package import Package
 from user import User
 from room_settings import RoomSettings
 from default_quiz import DefaultQuiz
@@ -53,6 +53,9 @@ class Room:
             messages_to_users.append(Package(user.socket, message_to_users))
 
         return messages_to_users
+
+    def update(self):
+        pass
 
     def update(self):
         self.quiz.update()

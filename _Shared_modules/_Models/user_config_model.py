@@ -1,6 +1,6 @@
 from peewee import *
-from base_model import BaseModel
-from user_model import UserModel
+from .base_model import BaseModel
+from .user_model import UserModel
 
 
 class UserConfigModel(BaseModel):
