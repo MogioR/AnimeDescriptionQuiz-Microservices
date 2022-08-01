@@ -51,36 +51,5 @@ user = UserModel.create(user_login='mogior', user_pass_hash='mogior')
 UserConfigModel.create(user_config_user_id=user.user_id)
 UserStatsModel.create(user_stats_user_id=user.user_id, user_stats_special_points=1000)
 
-# Tags
-comedy_tag = TagModel.create(tag_name='Comedy')
-
-
-# Titles
-    # Clanad
-title = TitleModel.create(title_type=0, title_shikimori_id='z2167', title_rating=8.03)
-TitleNameModel.create(title_name_title_id=title.title_id, title_name_name='Кланнад', title_names_language=1)
-TitleNameModel.create(title_name_title_id=title.title_id, title_name_name='Clannad', title_names_language=2)
-
-question = QuestionModel.create(question_lang=1, question_type=0, question_source=json.dumps(
-    ['Томоя Окадзаки — бездельник, уверенный, что жизнь скучна, а сам он ни на что не годен. Он ненавидит свой город. '
-     'Вместе с другом Сунохарой они постоянно прогуливают школу и делают что им заблагорассудится.'
-     ], ensure_ascii=False))
-
-QuestionAnswerModel.create(question_answer_question_id=question.question_id, question_answer_answer_id=title.title_id)
-TagTitleModel.create(tag_title_tag_id= comedy_tag.tag_id, tag_title_title_id=title.title_id)
-
-UserTitleModel.create(user_title_user_id=user.user_id, user_title_title_id=title.title_id)
-
-    # Air
-title = TitleModel.create(title_type=0, title_shikimori_id='101', title_rating=7.29)
-TitleNameModel.create(title_name_title_id=title.title_id, title_name_name='Высь', titles_name_language=1)
-TitleNameModel.create(title_name_title_id=title.title_id, title_name_name='Air', titles_name_language=2)
-
-question = QuestionModel.create(question_lang=1, question_type=0, question_source=json.dumps(
-    ['История повествует о путешествии Кунисаки Юкито, ищущего Крылатую Деву, привязанную к небесам много столетий '
-     'назад. На поиски он отправился после того, как услышал от своей матери старую детскую сказку.'
-     ], ensure_ascii=False))
-
-QuestionAnswerModel.create(question_answer_question_id=question.question_id, question_answer_answer_id=title.title_id)
 
 
