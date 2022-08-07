@@ -5,57 +5,56 @@ from default_quiz import DefaultQuiz
 
 
 class Room:
-    def __init__(self, room_settings: dict):
+    def __init__(self, settings: dict):
         self.host = None
         self.users = []
-        self.options = []
+        # self.options = []
         self.status = "created"
-        self.settings = RoomSettings(room_settings)
+        self.room_settings = RoomSettings(settings['room_settings'])
+        self.quiz = DefaultQuiz(settings['quiz_settings'], settings['question_settings'], self.users)
 
-        self.quiz = DefaultQuiz()
-
-    def connect(self, user: User) -> list:
+    def connect(self, connected_user: User):
         if self.host is None:
-            self.host = user
+            self.host = connected_user
             self.status = "in_lobby"
 
-        if len(self.users) < self.settings.room_size:
-            self.users.append(user)
+        if len(self.users) < self.room_settings.room_size:
+            self.users.append(connected_user)
 
-            message_to_connected = Package(user.socket, {'action': 'room', 'type': 'enter_to_room',
-                                                         'room_settings': self.settings, 'host': self.host})
-            messages_to_users = [message_to_connected]
-            message_to_users = {'action': 'room', 'type': 'user_connect', 'user': user, 'new_user_list': self.users}
+            connected_user.socket.send({'action': 'room', 'type': 'enter_to_room',
+                                        'settings': {
+                                            'room': self.room_settings,
+                                            'quiz': self.quiz.quiz_settings,
+                                            'question': self.quiz.question_generator.question_settings
+                                        },
+                                        'host': self.host})
+
+            message_to_users = {'action': 'room', 'type': 'user_connect', 'user': connected_user,
+                                'new_user_list': self.users}
 
             for user in self.users:
-                messages_to_users.append(Package(user.socket, message_to_users))
-            return messages_to_users
+                user.socket.send(message_to_users)
+
         else:
-            return [Package(user.socket, {'action': 'system', 'type': 'error', 'text': 'Room is full.'})]
+            connected_user.socket.send({'action': 'system', 'type': 'error', 'text': 'Room is full.'})
 
-    def disconnect(self, user: User) -> list:
-        messages_to_users = []
-
-        self.users.remove(user)
+    def disconnect(self, disconnected_user: User):
+        self.users.remove(disconnected_user)
         new_host = False
-        if user is self.host:
+        if disconnected_user is self.host:
             new_host = True
             if len(self.users) > 0:
                 self.host = self.users[0]
             else:
                 self.host = None
 
-        message_to_users = {'action': 'room', 'type': 'user_disconnect', 'user': user, 'new_user_list': self.users}
+        message_to_users = {'action': 'room', 'type': 'user_disconnect', 'user': disconnected_user,
+                            'new_user_list': self.users}
         if new_host:
             message_to_users.update({'new_host': self.host})
 
         for user in self.users:
-            messages_to_users.append(Package(user.socket, message_to_users))
-
-        return messages_to_users
-
-    def update(self):
-        pass
+            user.socket.send(message_to_users)
 
     def update(self):
         self.quiz.update()

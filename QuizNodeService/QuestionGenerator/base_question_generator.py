@@ -1,7 +1,10 @@
 from question import Question
 
 
-class IQuestionGenerator:
+class BaseQuestionGenerator:
+    def get_questions(self, questions_count: int):
+        pass
+
     def get_question(self) -> Question:
         pass
 

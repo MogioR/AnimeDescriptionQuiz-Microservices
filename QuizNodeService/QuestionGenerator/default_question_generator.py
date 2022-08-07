@@ -8,7 +8,7 @@ from playhouse.shortcuts import model_to_dict
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))) + '\\_Shared_modules')
 # print(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))) + '\\_Shared_modules\\_Models')
 
-from i_question_generator import IQuestionGenerator
+from base_question_generator import BaseQuestionGenerator
 from question import Question
 from _Models import TitleModel, QuestionModel, QuestionAnswerModel, UserTitleModel, TagTitleModel, TitleNameModel
 
@@ -19,7 +19,7 @@ ALL_TAGS = [1, 2, 3, 4, 5, 6, 7, 8, 9,
             40]
 
 
-class DefaultQuestionGenerator(IQuestionGenerator):
+class DefaultQuestionGenerator(BaseQuestionGenerator):
     def __init__(self, question_settings: dict, players_ids: list):
         self.question_settings = question_settings
         self.players_ids = players_ids

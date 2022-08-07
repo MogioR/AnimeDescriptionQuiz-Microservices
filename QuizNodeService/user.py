@@ -1,6 +1,9 @@
+from smart_socket import SmartSocket
+
+
 class User:
-    def __init__(self, socket, user_id: int, account_data: dir):
-        self.socket = socket
+    def __init__(self, socket: SmartSocket, user_id: int, account_data: dir):
+        self.socket: SmartSocket = socket
         self.user_id = user_id
         self.username = account_data['username']
         self.experience = account_data['experience']

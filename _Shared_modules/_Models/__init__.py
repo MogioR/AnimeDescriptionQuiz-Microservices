@@ -8,3 +8,5 @@ from .user_model import UserModel
 from .user_title_model import UserTitleModel
 from .user_config_model import UserConfigModel
 from .user_stats_model import UserStatsModel
+from .aggregator_model import AggregatorModel
+from .aggregator_to_title_model import AggregatorTitleModel
