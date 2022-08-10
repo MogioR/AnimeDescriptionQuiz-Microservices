@@ -1,3 +1,6 @@
+import json
+
+
 class RoomSettings:
     def __init__(self, room_settings: dict):
         self.room_size = room_settings['room_size'] if 'room_size' in room_settings.keys() else 8
@@ -10,3 +13,10 @@ class RoomSettings:
 
     def __repr__(self):
         return str(self)
+
+
+class RoomOptionsEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, RoomSettings):
+            return obj.__dict__
+        return json.JSONEncoder.default(self, obj)

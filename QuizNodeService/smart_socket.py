@@ -9,14 +9,14 @@ class SmartSocket:
         self.user_id = user_id
         self.message_queue = message_queue
 
-    async def send(self, message: dict):
+    async def send(self, message: dict, json_encoder=json.JSONEncoder):
         self.message_queue.append(
             (
                 self.node_socket,
                 json.dumps({
                     'type': 'toUser',
                     'user': self.user_id,
-                    'message': json.dumps(message)
+                    'message': json.dumps(message, cls=json_encoder, ensure_ascii=False)
                 })
             )
         )

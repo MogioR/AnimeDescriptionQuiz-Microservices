@@ -15,10 +15,10 @@ class DefaultQuiz:
 
         self.quiz_settings = quiz_settings
         self.question_generator = DefaultQuestionGenerator(question_settings, [a.user_id for a in users])
-        self.users = {user.user_id: user for user in users}
 
+        self.users = {}
+        self.users_answers = {}
         self.question = None
-        self.users_answers = {user.user_id:  {'answer': '', 'correct': False} for user in users}
 
     async def update(self):
         if self.phase != 0 and not self.quiz_in_pause:
@@ -33,7 +33,7 @@ class DefaultQuiz:
                 'new_question': self.question.question_message_data()
             }
             for user in self.users.values():
-                user.socket.send(message_to_users)
+                await user.socket.send(message_to_users)
 
             self.timer = 0
             self.phase = 2
@@ -47,7 +47,7 @@ class DefaultQuiz:
                 'users_answers': self.users_answers
             }
             for user in self.users.values():
-                user.socket.send(message_to_users)
+                await user.socket.send(message_to_users)
 
             self.timer = 0
             self.phase = 3
@@ -62,7 +62,10 @@ class DefaultQuiz:
                 self.phase = 0
             self.timer = 0
 
-    async def start_quiz(self):
+    async def start_quiz(self, users):
+        self.users = {user.user_id: user for user in users}
+        self.users_answers = {user.user_id: {'answer': '', 'correct': False} for user in users}
+
         question_count = await self.question_generator.get_questions(self.quiz_settings['round_count'])
         if question_count > 0:
             self.phase = 1
@@ -71,7 +74,7 @@ class DefaultQuiz:
     async def get_hints(self, user_id, answer: str):
         if len(answer) >= MIN_MASK_SIZE:
             hints = TitleNameModel.select().where(TitleNameModel.title_name_name.contains(answer))
-            self.users[user_id].socket.send({
+            await self.users[user_id].socket.send({
                 'action': 'quiz',
                 'type': 'hints',
                 'data': hints

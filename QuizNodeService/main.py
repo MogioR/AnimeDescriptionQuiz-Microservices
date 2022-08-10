@@ -1,5 +1,6 @@
 import asyncio
 import websockets
+import time
 from game_node import GameNode
 
 game_node = GameNode()
@@ -14,12 +15,18 @@ async def consumer_handler(socket, path):
 
 
 async def producer_handler():
-    while len(game_node.message_queue) != 0:
-        package = game_node.message_queue.popleft()
-        try:
-            await package[0].send(package[1])
-        except Exception as e:
-            print("Error", e)
+    while True:
+        # print(1)
+        # _old = time.time()
+        await asyncio.sleep(0.0000000000000000001)
+        # print(time.time() - _old)
+
+        while len(game_node.message_queue) != 0:
+            package = game_node.message_queue.popleft()
+            try:
+                await package[0].send(package[1])
+            except Exception as e:
+                print("Error", e)
 
 
 async def close_handler(websocket):
@@ -32,6 +39,7 @@ def connect(socket: websockets):
         game_node.orchestrator_socket = socket
     else:
         game_node.node_sockets.add(socket)
+    print(socket, 'CONNECTED')
 
 
 def disconnect(socket: websockets):
@@ -64,7 +72,10 @@ async def handler(socket, path):
 
 async def server_loop():
     while True:
-        print(1)
+        # print(1)
+        # _old = time.time()
+        await asyncio.sleep(1)
+        # print(time.time() - _old)
         await game_node.update()
 
 
@@ -72,4 +83,5 @@ start_server = websockets.serve(handler, "localhost", 5677)
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(start_server)
+loop.create_task(server_loop())
 loop.run_forever()

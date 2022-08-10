@@ -7,10 +7,9 @@ from peewee import fn, JOIN
 from playhouse.shortcuts import model_to_dict
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))) + '\\_Shared_modules')
-# print(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))) + '\\_Shared_modules\\_Models')
 
-from base_question_generator import BaseQuestionGenerator
-from question import Question
+from .base_question_generator import BaseQuestionGenerator
+from .question import Question
 from _Models import TitleModel, QuestionModel, QuestionAnswerModel, UserTitleModel, TagTitleModel, TitleNameModel
 
 ALL_TAGS = [1, 2, 3, 4, 5, 6, 7, 8, 9,
@@ -26,12 +25,17 @@ class DefaultQuestionGenerator(BaseQuestionGenerator):
         self.players_ids = players_ids
         self.question_pool = []
 
+    @staticmethod
+    def str_to_date(raw_date: str):
+        buf = raw_date.split('-')
+        return datetime(int(buf[0]), int(buf[1]), int(buf[2]), 0, 0)
+
     async def get_questions(self, questions_count: int):
         title_base_filters = (
                 (TitleModel.title_rating >= self.question_settings['rating_min']) &
                 (TitleModel.title_rating <= self.question_settings['rating_max']) &
-                (TitleModel.title_creation_date >= self.question_settings['creation_date_min']) &
-                (TitleModel.title_creation_date <= self.question_settings['creation_date_max']) &
+                (TitleModel.title_creation_date >= self.str_to_date(self.question_settings['creation_date_min'])) &
+                (TitleModel.title_creation_date <= self.str_to_date(self.question_settings['creation_date_max'])) &
                 (TitleModel.title_type << self.question_settings['title_allowed_types']) &
                 (TitleModel.title_sub_type << self.question_settings['title_allowed_sub_types'])
         )

@@ -1,7 +1,10 @@
 import asyncio
-from user import User
-from room_settings import RoomSettings
+import json
+from user import User, UserEncoder
+from room_settings import RoomSettings, RoomOptionsEncoder
 from QuizNodeService.Quiz.default_quiz import DefaultQuiz
+
+from _Shared_modules.multiple_encoders import MultipleJsonEncoders, DateEncoder
 
 
 class Room:
@@ -27,17 +30,22 @@ class Room:
                                                   'quiz': self.quiz.quiz_settings,
                                                   'question': self.quiz.question_generator.question_settings
                                               },
-                                              'host': self.host})
+                                              'host': self.host
+                                              }, json_encoder=MultipleJsonEncoders(UserEncoder, RoomOptionsEncoder,
+                                                                                   DateEncoder))
 
             message_to_users = {'action': 'room', 'type': 'user_connect', 'user': connected_user,
                                 'new_user_list': self.users}
 
             for user in self.users:
-                user.socket.send(message_to_users)
+                await user.socket.send(message_to_users,
+                                       json_encoder=MultipleJsonEncoders(UserEncoder, RoomOptionsEncoder, DateEncoder))
 
             return True
         else:
-            await connected_user.socket.send({'action': 'system', 'type': 'error', 'text': 'Room is full.'})
+            await connected_user.socket.send({'action': 'system', 'type': 'error', 'text': 'Room is full.'},
+                                             json_encoder=MultipleJsonEncoders(UserEncoder, RoomOptionsEncoder,
+                                                                               DateEncoder))
             return False
 
     async def disconnect(self, disconnected_user: User):
@@ -56,16 +64,22 @@ class Room:
             message_to_users.update({'new_host': self.host})
 
         for user in self.users:
-            user.socket.send(message_to_users)
+            await user.socket.send(message_to_users,
+                                   json_encoder=MultipleJsonEncoders(UserEncoder, RoomOptionsEncoder, DateEncoder))
 
     async def message_produce(self, user_id: int, message: dict):
-        pass
+        if message['action'] == 'start_quiz':
+            await self.start_quiz()
+        elif message['action'] == 'get_hints':
+            await self.quiz.get_hints(user_id, message['answer'])
+        elif message['action'] == 'set_answer':
+            await self.quiz.set_answer(user_id, message['answer'])
+
+    async def start_quiz(self):
+        await self.quiz.start_quiz(self.users)
 
     async def update(self):
         await self.quiz.update()
-
-    async def start_quiz(self):
-        await self.quiz.start_quiz()
 
     async def stop_quiz(self):
         await self.quiz.stop_quiz()
