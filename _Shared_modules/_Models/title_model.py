@@ -13,6 +13,7 @@ from .base_model import BaseModel
 #     'MUSIC': 7
 # }
 
+
 class TitleModel(BaseModel):
     title_id = IdentityField()
     title_type = SmallIntegerField(null=False)  # 0-anime, 1-manga, 2-ranobe

@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import asyncio
 from datetime import date, datetime, timedelta
 from peewee import fn, JOIN
 from playhouse.shortcuts import model_to_dict
@@ -25,13 +26,14 @@ class DefaultQuestionGenerator(BaseQuestionGenerator):
         self.players_ids = players_ids
         self.question_pool = []
 
-    def get_questions(self, questions_count: int):
+    async def get_questions(self, questions_count: int):
         title_base_filters = (
                 (TitleModel.title_rating >= self.question_settings['rating_min']) &
                 (TitleModel.title_rating <= self.question_settings['rating_max']) &
                 (TitleModel.title_creation_date >= self.question_settings['creation_date_min']) &
                 (TitleModel.title_creation_date <= self.question_settings['creation_date_max']) &
-                (TitleModel.title_type << self.question_settings['title_allowed_types'])
+                (TitleModel.title_type << self.question_settings['title_allowed_types']) &
+                (TitleModel.title_sub_type << self.question_settings['title_allowed_sub_types'])
         )
 
         query_titles = TitleModel.select(TitleModel.title_id).where(title_base_filters)
@@ -95,30 +97,52 @@ class DefaultQuestionGenerator(BaseQuestionGenerator):
                 }
             )
             self.question_pool.append(question)
+        return len(self.question_pool)
 
-    def get_question(self):
+    async def get_question(self):
         return self.question_pool.pop()
 
-    def check_question(self, question: Question, answer: str) -> bool:
+    async def check_question(self, question: Question, answer: str) -> bool:
         pass
 
 
-generator = DefaultQuestionGenerator({
-    'rating_min': 8,
-    'rating_max': 10,
-    'creation_date_min': datetime(2020, 1, 1, 0, 00),
-    'creation_date_max': datetime(2022, 12, 1, 0, 00),
-    'quiz_chance_min': 0.0,
-    'quiz_chance_max': 1.0,
-    'title_allowed_types': [0],
-    'question_allowed_types': [0],
-    'include_tags': [],
-    'exclude_tags': [1],
-    'only_users_lists': False
-},
-    [
+# generator = DefaultQuestionGenerator({
+#     'rating_min': 6,
+#     'rating_max': 7.9,
+#     'creation_date_min': datetime(2020, 1, 1, 0, 00),
+#     'creation_date_max': datetime(2022, 12, 1, 0, 00),
+#     'quiz_chance_min': 0.0,
+#     'quiz_chance_max': 1.0,
+#     'title_allowed_types': [0],
+#     'title_allowed_sub_types': [0],
+#     'question_allowed_types': [0, 1],
+#     'include_tags': [],
+#     'exclude_tags': [],
+#     'only_users_lists': False
+# },
+#     [
+#
+#     ])
+#
+#
+# def cute_print(content: str, size: int):
+#     while len(content) > 0:
+#         print(content[0:size])
+#         content = content[size:len(content)]
 
-    ])
 
-
-
+# import pyttsx3
+# engine = pyttsx3.init()
+# engine.setProperty('rate', 300)    # Speed percent (can go over 100)
+# engine.setProperty('volume', 0.9)  # Volume 0-1
+#
+#
+# generator.get_questions(100)
+# for i in range(100):
+#     q = generator.get_question()
+#     cute_print(q.question_source['hosts'][0]['source'], 200)
+#     engine.say(q.question_source['hosts'][0]['source'].replace('*', ''))
+#     engine.runAndWait()
+#     l = input()
+#     print([a['title_name_name'] for a in q.answer_data['title_names']])
+#     l = input()

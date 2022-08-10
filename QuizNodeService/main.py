@@ -1,41 +1,23 @@
 import asyncio
 import websockets
-from collections import deque
-import json
-import threading
+from game_node import GameNode
 
-import requests
-import re
-
-
-messageQueue = deque()
-gameLoopAlive = 0
-
-clients_id_to_socket = {}
-clients_socket_to_id = {}
-
-
-async def consumer(socket, message):
-    print(message)
-    messageQueue.append(Package(socket, '{}'))
+game_node = GameNode()
 
 
 async def consumer_handler(socket, path):
     async for message in socket:
-        print(socket, message)
         try:
-            await consumer(socket, message)
+            await game_node.socket_message(socket, message)
         except Exception as e:
             print("Consumer error: ", e, "socket: ", socket)
 
 
 async def producer_handler():
-    while len(messageQueue) != 0:
-        print('d')
-        package = messageQueue.popleft()
-        print(package.socket, package.message)
+    while len(game_node.message_queue) != 0:
+        package = game_node.message_queue.popleft()
         try:
-            await package.socket.send(package.message)
+            await package[0].send(package[1])
         except Exception as e:
             print("Error", e)
 
@@ -46,16 +28,17 @@ async def close_handler(websocket):
 
 
 def connect(socket: websockets):
-    len_ = len(clients_id_to_socket)
-    clients_id_to_socket[len_] = socket
-    clients_socket_to_id[socket] = len_
-    print(socket, 'CONNECTED')
+    if game_node.orchestrator_socket is None:
+        game_node.orchestrator_socket = socket
+    else:
+        game_node.node_sockets.add(socket)
 
 
 def disconnect(socket: websockets):
-    id_ = clients_socket_to_id[socket]
-    del clients_id_to_socket[id_]
-    del clients_socket_to_id[socket]
+    if game_node.orchestrator_socket == socket:
+        game_node.orchestrator_socket = None
+    else:
+        game_node.orchestrator_socket.discard(socket)
     print(socket, 'DISCONNECTED')
 
 
@@ -82,10 +65,10 @@ async def handler(socket, path):
 async def server_loop():
     while True:
         print(1)
-        await asyncio.sleep(1)
+        await game_node.update()
+
 
 start_server = websockets.serve(handler, "localhost", 5677)
-
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(start_server)

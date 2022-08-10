@@ -133,7 +133,7 @@ with open("test_base.json", "r", encoding='utf-8') as f:
 
 
 tags = set()
-for title in tqdm(test_base['titles']):
+for title in tqdm(test_base):
     for tag in title['geners']:
         tags.add(tag)
 
@@ -143,7 +143,7 @@ for tag in tags:
     tag_to_tagID[tag] = TagModel.create(tag_name=str(tag)).tag_id
 
 # Titles upload
-for title in tqdm(test_base['titles']):
+for title in tqdm(test_base):
     title_model_id = TitleModel.create(
         title_type=0,
         title_sub_type=sub_type_to_int[title['subtype']],

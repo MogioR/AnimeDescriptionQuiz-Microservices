@@ -1,7 +1,7 @@
-from package import Package
+import asyncio
 from user import User
 from room_settings import RoomSettings
-from default_quiz import DefaultQuiz
+from QuizNodeService.Quiz.default_quiz import DefaultQuiz
 
 
 class Room:
@@ -13,7 +13,7 @@ class Room:
         self.room_settings = RoomSettings(settings['room_settings'])
         self.quiz = DefaultQuiz(settings['quiz_settings'], settings['question_settings'], self.users)
 
-    def connect(self, connected_user: User):
+    async def connect(self, connected_user: User):
         if self.host is None:
             self.host = connected_user
             self.status = "in_lobby"
@@ -21,13 +21,13 @@ class Room:
         if len(self.users) < self.room_settings.room_size:
             self.users.append(connected_user)
 
-            connected_user.socket.send({'action': 'room', 'type': 'enter_to_room',
-                                        'settings': {
-                                            'room': self.room_settings,
-                                            'quiz': self.quiz.quiz_settings,
-                                            'question': self.quiz.question_generator.question_settings
-                                        },
-                                        'host': self.host})
+            await connected_user.socket.send({'action': 'room', 'type': 'enter_to_room',
+                                              'settings': {
+                                                  'room': self.room_settings,
+                                                  'quiz': self.quiz.quiz_settings,
+                                                  'question': self.quiz.question_generator.question_settings
+                                              },
+                                              'host': self.host})
 
             message_to_users = {'action': 'room', 'type': 'user_connect', 'user': connected_user,
                                 'new_user_list': self.users}
@@ -35,10 +35,12 @@ class Room:
             for user in self.users:
                 user.socket.send(message_to_users)
 
+            return True
         else:
-            connected_user.socket.send({'action': 'system', 'type': 'error', 'text': 'Room is full.'})
+            await connected_user.socket.send({'action': 'system', 'type': 'error', 'text': 'Room is full.'})
+            return False
 
-    def disconnect(self, disconnected_user: User):
+    async def disconnect(self, disconnected_user: User):
         self.users.remove(disconnected_user)
         new_host = False
         if disconnected_user is self.host:
@@ -56,14 +58,17 @@ class Room:
         for user in self.users:
             user.socket.send(message_to_users)
 
-    def update(self):
-        self.quiz.update()
+    async def message_produce(self, user_id: int, message: dict):
+        pass
 
-    def start_quiz(self):
-        self.quiz.start_quiz()
+    async def update(self):
+        await self.quiz.update()
 
-    def stop_quiz(self):
-        self.stop_quiz()
+    async def start_quiz(self):
+        await self.quiz.start_quiz()
 
-    def resume_quiz(self):
-        self.quiz.resume_quiz()
+    async def stop_quiz(self):
+        await self.quiz.stop_quiz()
+
+    async def resume_quiz(self):
+        await self.quiz.resume_quiz()

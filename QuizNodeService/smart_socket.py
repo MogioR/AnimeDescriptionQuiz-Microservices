@@ -1,13 +1,15 @@
 import json
+import asyncio
+from collections import deque
 
 
 class SmartSocket:
-    def __init__(self, node_socket, user_id: int, message_queue: list):
+    def __init__(self, node_socket, user_id: int, message_queue: deque):
         self.node_socket = node_socket
         self.user_id = user_id
         self.message_queue = message_queue
 
-    def send(self, message: dict):
+    async def send(self, message: dict):
         self.message_queue.append(
             (
                 self.node_socket,
@@ -18,3 +20,9 @@ class SmartSocket:
                 })
             )
         )
+
+    def __hash__(self):
+        return hash((self.node_socket, self.user_id))
+
+    def __eq__(self, other):
+        return (self.node_socket, self.user_id) == (other.node_socket, other.user_id)
