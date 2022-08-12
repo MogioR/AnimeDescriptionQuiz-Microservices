@@ -98,7 +98,8 @@ class DefaultQuestionGenerator(BaseQuestionGenerator):
                         TitleNameModel.title_name_title_id == question.questionanswermodel.question_answer_answer_id
                     ).dicts()),
                     'title_data': model_to_dict(question.questionanswermodel.question_answer_answer_id)
-                }
+                },
+                question
             )
             self.question_pool.append(question)
         return len(self.question_pool)

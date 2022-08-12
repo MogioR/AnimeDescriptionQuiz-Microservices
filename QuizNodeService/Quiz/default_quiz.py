@@ -1,6 +1,7 @@
 import asyncio
+from .QuestionGenerator import Question
 from .QuestionGenerator import DefaultQuestionGenerator
-from _Shared_modules._Models.title_name_model import TitleNameModel
+from _Shared_modules._Models import TitleNameModel, UserStatsModel
 
 
 MIN_MASK_SIZE = 3
@@ -27,6 +28,9 @@ class DefaultQuiz:
         if self.phase == 1:
             # Send new question
             self.question = await self.question_generator.get_question()
+            self.question.question_raw.question_made_up_times += len(self.users)
+            self.question.question_raw.save()
+
             message_to_users = {
                 'action': 'quiz',
                 'type': 'new_question',
@@ -40,6 +44,10 @@ class DefaultQuiz:
         elif self.phase == 2 and self.timer > self.quiz_settings['question_time']:
             # Send results
             await self.check_answers()
+            self.question.question_raw.question_guessed_times +=\
+                len([u['correct'] for u in self.users_answers if u['correct']])
+            self.question.question_raw.save()
+
             message_to_users = {
                 'action': 'quiz',
                 'type': 'results',
@@ -64,7 +72,11 @@ class DefaultQuiz:
 
     async def start_quiz(self, users):
         self.users = {user.user_id: user for user in users}
-        self.users_answers = {user.user_id: {'answer': '', 'correct': False} for user in users}
+        self.users_answers = {user.user_id: {
+            'answer': '',
+            'correct': False,
+            'user_stats': UserStatsModel.select().where(UserStatsModel.user_stats_user_id == user.user_id).get()
+        } for user in users}
 
         question_count = await self.question_generator.get_questions(self.quiz_settings['round_count'])
         if question_count > 0:
@@ -92,7 +104,14 @@ class DefaultQuiz:
                     ).get().title_name_title_id)
             except Exception as e:
                 title_id = None
-            self.users_answers[user_id] = title_id in self.question.answers_ids
+
+            self.users_answers[user_id]['correct'] = title_id in self.question.answers_ids
+            self.users_answers[user_id]['user_stats'].user_stats_exp += \
+                1 if title_id in self.question.answers_ids else 0
+            self.users_answers[user_id]['user_stats'].user_stats_made_up_times += 1
+            self.users_answers[user_id]['user_stats'].user_stats_guessed_times += \
+                1 if title_id in self.question.answers_ids else 0
+            self.users_answers[user_id]['user_stats'].save()
 
     async def stop_quiz(self):
         pass

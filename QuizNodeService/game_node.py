@@ -15,7 +15,7 @@ from _Shared_modules._Models import UserModel, UserStatsModel
 
 class GameNode:
     def __init__(self):
-        self.orchestrator_socket = None
+        self.orchestrator_socket: SmartSocket = None
         self.node_sockets = set()
 
         self.sockets_users = {}
@@ -25,6 +25,13 @@ class GameNode:
     async def create_room(self, room_id: int, room_settings: dict):
         print('Room created')
         self.rooms[room_id] = Room(room_settings)
+        self.message_queue.append((
+            self.orchestrator_socket,
+            json.dumps({
+                'type': 'room_created',
+                'room_id': room_id
+            })
+        ))
 
     async def connect_to_room(self, smart_socket: SmartSocket, room_id: int):
         print('Connected to room')
@@ -35,6 +42,11 @@ class GameNode:
             is_connected = await self.rooms[room_id].connect(self.sockets_users[smart_socket])
             if is_connected:
                 self.sockets_users[smart_socket].room = room_id
+
+                self.message_queue.append((self.orchestrator_socket, json.dumps({
+                    'action': 'connection_to_room',
+                    'room_id': room_id,
+                }, ensure_ascii=False)))
             else:
                 del self.sockets_users[smart_socket]
         else:
@@ -56,6 +68,17 @@ class GameNode:
             del self.sockets_users[smart_socket]
         else:
             await self.rooms[self.sockets_users[smart_socket].room].disconnect()
+            if len(self.rooms[self.sockets_users[smart_socket].room].users) == 0:
+                del self.rooms[self.sockets_users[smart_socket].room]
+                self.message_queue.append((self.orchestrator_socket, json.dumps({
+                    'action': 'delete_room',
+                    'room_id': self.sockets_users[smart_socket].room,
+                }, ensure_ascii=False)))
+            else:
+                self.message_queue.append((self.orchestrator_socket, json.dumps({
+                    'action': 'disconnect_from_room',
+                    'room_id': self.sockets_users[smart_socket].room,
+                }, ensure_ascii=False)))
             del self.sockets_users[smart_socket]
 
     async def socket_message(self, socket, message):
@@ -63,7 +86,9 @@ class GameNode:
             message = json.loads(message)
             if socket == self.orchestrator_socket:
                 if message['type'] == 'from_orchestrator':
-                    await self.create_room(message['room_id'], message['room_options'])
+                    message = message['data']
+                    if message['type'] == 'connect':
+                        await self.create_room(message['room_id'], message['room_options'])
             else:
                 if message['type'] == 'from_user':
                     message = message['data']
@@ -87,6 +112,7 @@ class GameNode:
     async def update(self):
         for room in self.rooms.values():
             await room.update()
+
     # def connect(self, socket, user_id, message_queue):
     #     smart_socket = SmartSocket(socket, user_id, message_queue)
     #     self.sockets_users[smart_socket] = User(smart_socket, user_id, {})

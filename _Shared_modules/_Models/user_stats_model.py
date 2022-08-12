@@ -15,5 +15,8 @@ class UserStatsModel(BaseModel):
     user_stats_exp = IntegerField(null=False, default=0)
     user_stats_special_points = IntegerField(null=False, default=0)
 
+    user_stats_made_up_times = IntegerField(null=False, default=1)
+    user_stats_guessed_times = IntegerField(null=False, default=1)
+
     class Meta:
         db_table = "user_stats"
