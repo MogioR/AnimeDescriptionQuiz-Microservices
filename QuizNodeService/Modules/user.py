@@ -1,5 +1,5 @@
 import json
-from smart_socket import SmartSocket
+from .smart_socket import SmartSocket
 
 
 class User:

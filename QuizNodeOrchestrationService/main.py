@@ -8,12 +8,9 @@ from quart import websocket, Response, abort, request
 from Modules.quiz_node_orchestrator import QuizNodeOrchestrator
 from Modules.smart_socket import SmartSocket
 
-# PORT = os.getenv('CLIENT_NODE_ORCHESTRATION_PORT')
-PORT = 1235
-# ws://127.0.0.1:1235/ws?token=APP_TOKEN
-AUTHENTICATION_TOKEN = os.getenv('AUTHENTICATION_TOKEN')  # APP_TOKEN
+PORT = os.getenv('QUIZ_NODE_ORCHESTRATION_PORT')
+AUTHENTICATION_TOKEN = os.getenv('AUTHENTICATION_TOKEN')
 app = Quart(__name__)
-# node_orchestrator = NodeOrchestrator(os.getenv('TOKEN_SERVICE_HOST')+':'+os.getenv('TOKEN_SERVICE_PORT'))
 
 PRODUCER_CREATED = False
 CURRENT_SOCKET = websocket._get_current_object
@@ -78,8 +75,6 @@ def registration(func):
 @app.websocket('/ws')
 @registration
 async def ws():
-    # ws://127.0.0.1:1235/ws?token=213123
-    # print(websocket.remote_addr)
     global PRODUCER_CREATED
 
     while SmartSocket(CURRENT_SOCKET()) in quiz_node_orchestrator.quiz_nodes.keys():

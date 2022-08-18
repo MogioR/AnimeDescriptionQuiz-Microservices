@@ -15,8 +15,8 @@ class SmartSocket:
                 json.dumps({
                     'type': 'toUser',
                     'user': self.user_id,
-                    'message': json.dumps(message, cls=json_encoder, ensure_ascii=False)
-                })
+                    'message': message
+                }, cls=json_encoder, ensure_ascii=False)
             )
         )
 

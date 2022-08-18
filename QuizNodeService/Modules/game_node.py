@@ -4,9 +4,9 @@ import os
 import sys
 from collections import deque
 
-from room import Room
-from user import User
-from smart_socket import SmartSocket
+from .room import Room
+from .user import User
+from .smart_socket import SmartSocket
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))) + '\\_Shared_modules')
 
@@ -21,6 +21,7 @@ class GameNode:
         self.sockets_users = {}
         self.message_queue = deque()
         self.rooms = {}
+        self.port = None
 
     async def create_room(self, room_id: int, room_settings: dict):
         print('Room created')

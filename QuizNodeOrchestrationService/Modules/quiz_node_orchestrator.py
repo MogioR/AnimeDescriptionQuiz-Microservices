@@ -17,8 +17,12 @@ class QuizNodeOrchestrator:
         # self.players = dict()
 
     async def connect_node(self, socket):
+
         self.quiz_nodes[SmartSocket(socket, self.message_queue)] = \
-            QuizNode(SmartSocket(socket, self.message_queue), self.last_node_id)
+            QuizNode(SmartSocket(socket, self.message_queue), self.last_node_id, {
+                'host': socket.scope['client'][0],
+                'port': socket.scope['client'][1]
+            })
         self.last_node_id += 1
 
     async def disconnect_node(self, socket):

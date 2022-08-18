@@ -1,8 +1,6 @@
-import asyncio
-import json
-from user import User, UserEncoder
-from room_settings import RoomSettings, RoomOptionsEncoder
-from QuizNodeService.Quiz.default_quiz import DefaultQuiz
+from .user import User, UserEncoder
+from .room_settings import RoomSettings, RoomOptionsEncoder
+from QuizNodeService.Modules.Quiz import DefaultQuiz
 
 from _Shared_modules.multiple_encoders import MultipleJsonEncoders, DateEncoder
 
