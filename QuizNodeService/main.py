@@ -1,5 +1,6 @@
 import asyncio
 import websockets
+import socket
 import os
 from QuizNodeService.Modules.game_node import GameNode
 
@@ -75,21 +76,18 @@ async def server_loop():
 
 async def web_socket_connect(url):
     try:
-        async with websockets.connect(url) as socket:
+        async with websockets.connect(url, extra_headers={'port': game_node.port}) as socket:
             await handler(socket, '')
     except Exception as e:
         print(e)
 
 
-import random
-
-port = random.randint(1000, 2000)
-start_server = websockets.serve(handler, "localhost", None)
+start_server = websockets.serve(handler, "localhost", port=None, family=socket.AF_INET)
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(start_server)
 loop.create_task(server_loop())
-game_node.port = int(start_server.ws_server.server.sockets[0].getsockname()[1])
+game_node.port = start_server.ws_server.server.sockets[0].getsockname()[1]
 loop.create_task(producer_task())
 loop.create_task(web_socket_connect(
     'ws://' + os.getenv('QUIZ_NODE_ORCHESTRATION_HOST') +

@@ -95,7 +95,7 @@ class GameNode:
                     message = message['data']
                     if message['type'] == 'connect':
                         await self.connect_to_room(
-                            SmartSocket(socket, message['from_user'], self.message_queue),
+                            SmartSocket(socket, message['user_id'], self.message_queue),
                             message['room_id']
                         )
                     elif message['type'] == 'disconnect':

@@ -35,7 +35,6 @@ async def create_lobby(authentication_token: str, player_id: int) -> Response:
 
 
 async def producer_handler():
-    print(3)
     while True:
         await asyncio.sleep(0.0000000000000000001)
         while len(quiz_node_orchestrator.message_queue) != 0:

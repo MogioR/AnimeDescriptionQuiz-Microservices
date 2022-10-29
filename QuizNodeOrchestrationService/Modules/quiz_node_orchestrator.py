@@ -1,4 +1,6 @@
 import asyncio
+import requests
+import os
 from collections import deque
 
 from .quiz_node import QuizNode
@@ -17,12 +19,22 @@ class QuizNodeOrchestrator:
         # self.players = dict()
 
     async def connect_node(self, socket):
-
         self.quiz_nodes[SmartSocket(socket, self.message_queue)] = \
             QuizNode(SmartSocket(socket, self.message_queue), self.last_node_id, {
                 'host': socket.scope['client'][0],
-                'port': socket.scope['client'][1]
+                'port': int(socket.headers['Port'])
             })
+        lol = requests.post(
+            url='http://' + os.getenv('CLIENT_NODE_ORCHESTRATION_HOST') + ':' + os.getenv(
+                'CLIENT_NODE_ORCHESTRATION_PORT') + '/add_quiz_node/'+os.getenv('AUTHENTICATION_TOKEN'),
+            data={
+                'node_id': self.last_node_id,
+                'node_path': {
+                    'host': socket.scope['client'][0],
+                    'port': int(socket.headers['Port'])
+                }
+            }
+        )
         self.last_node_id += 1
 
     async def disconnect_node(self, socket):
@@ -33,7 +45,7 @@ class QuizNodeOrchestrator:
         self.last_room_id += 1
 
         self.rooms[room_id] = Room(room_id, settings)
-        min_quiz_node = min(self.quiz_nodes.values(), key=lambda quiz: len(quiz.rooms))
+        min_quiz_node = min(self.quiz_nodes.values(), key=lambda node: len(node.rooms))
         await min_quiz_node.create_room(self.rooms[room_id])
 
         await self.room_created_trigger(room_id)

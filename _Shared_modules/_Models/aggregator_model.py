@@ -1,4 +1,4 @@
-from peewee import *
+from peewee import IdentityField, CharField
 from .base_model import BaseModel
 
 
